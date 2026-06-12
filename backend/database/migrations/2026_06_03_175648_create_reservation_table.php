@@ -18,7 +18,7 @@ return new class extends Migration
             $table->decimal("montantTotal", 10, 2);
             $table->enum("statut", [
                 'En attente',
-                'Paiement e, vérification',
+                'Paiement en vérification',
                 'Confirmée',
                 'Annulée'
             ]);
