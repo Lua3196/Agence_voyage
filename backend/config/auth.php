@@ -42,6 +42,17 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        //pour gérer les fonctions permis pour admin et client
+        'admin' => [
+            'driver' => 'sanctum',
+            'provider' => 'admin',
+        ],
+
+        'client' => [
+            'driver' => 'sanctum',
+            'provider' => 'client',
+        ],
     ],
 
     /*
@@ -71,6 +82,15 @@ return [
         //     'driver' => 'database',
         //     'table' => 'users',
         // ],
+
+        'admin' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Admin::class,
+        ],
+        'client' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Client::class,
+        ],
     ],
 
     /*
