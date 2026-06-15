@@ -16,6 +16,8 @@ class Client extends Model
         'mdp'
     ];
 
+    protected $hidden = ['mdp'];
+
     public function reservation(){
         return $this->hasMany(Reservation::class, 'idClient');
     }

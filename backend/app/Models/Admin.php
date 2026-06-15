@@ -14,4 +14,6 @@ class Admin extends Model
         'email',
         'mdp'
     ];
+
+    protected $hidden = ['mdp'];
 }
