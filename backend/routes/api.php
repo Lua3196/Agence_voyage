@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthClientController;
 use App\Http\Controllers\AuthAdminController;
+use App\Http\Controllers\DestinationController;
 use App\Http\Controllers\VoyageController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,8 +24,12 @@ Route::prefix('admin')->group(function(){
     });
 });
 
-//seul admin est authorisé pour create, update et destroy pour Voyage
 
+Route::get('/destination', [DestinationController::class, 'index']);
+Route::get('destination/{destination}', [DestinationController::class, 'show']);
+
+
+//seul admin est authorisé pour create, update et destroy pour Voyage
 //client et admin
 Route::get('voyage', [VoyageController::class, 'index']);
 Route::get('voyage/{voyage}', [VoyageController::class, 'show']);
