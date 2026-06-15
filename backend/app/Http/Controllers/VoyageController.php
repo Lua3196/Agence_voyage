@@ -16,10 +16,8 @@ class VoyageController extends Controller
     }
     
 
-    public function show($id)
+    public function show(Voyage $voyage)
     {
-        $voyage = Voyage::with('destination')->findOrFail($id);
-
         return response()->json(['data'=> $voyage]);
     }
 
@@ -35,54 +33,15 @@ class VoyageController extends Controller
 
     
 
-    public function update(Request $request, Offres $offre)
-{
-    // 1. Validation : 'product_image' devient 'sometimes' ou 'nullable'
-    $attributes = $request->validate([
-        'name' => ['required'],
-        'price' => ['required'], 
-        'number' => ['required'], 
-        'location' => ['required'],
-        'schedule' => ['required', Rule::in(['Vente immédiate', 'Sur commande'])], 
-        'category' => ['required'],
-        'description' => ['required'],
-        'product_image' => ['nullable', File::types(['png', 'jpg'])], // Rendu optionnel
-        'url' => ['nullable'],
-        'tags' => ['nullable'],
-    ]);
-
-    Gate::authorize('edit', $offre);
-
-    // 2. Gestion de l'image
-    if ($request->hasFile('product_image')) {
-        $attributes['image'] = $request->file('product_image')->store('logos', 'public');
+    public function update(storeVoyageRequest $request, Voyage $voyage)
+    {
+        $voyage->update($request->validated());
+        return response()->json(['message' => 'Voyage modifié avec succès', 'data' => $voyage]);
     }
 
-    // 3. Mise à jour des données
-    $offre->update([
-        'nom_offre' => $attributes['name'],
-        'prix' => $attributes['price'],
-        'quantite' => $attributes['number'],
-        'Localisation' => $attributes['location'],
-        'type' => $attributes['schedule'],
-        'id_categorie' => $attributes['category'], 
-        'description' => $attributes['description'],
-        'image' => $attributes['image'] ?? $offre->image, // Garde l'ancienne si pas de nouvelle
-        'favoris' => false,
-    ]);
-
-    // 4. Synchronisation des filtres (Correction du nom : 'filtres' match avec le name du form)
-    $offre->filtres()->sync($request->filtre ?? []);
-
-    return redirect('/offres/' . $offre->id_offre);
-}
-        public function destroy(Offres $offre)
+    public function destroy(Voyage $voyage)
     {
-
-        Gate::authorize('edit', $offre);
-
-        $offre->delete();
-
-        return redirect('/');
+        $voyage->delete();
+        return response()->json(['message' => 'Voyage supprimé avec succès']);
     }
 }

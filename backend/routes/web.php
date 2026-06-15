@@ -7,13 +7,13 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('api')->group(function(){
     //client et admin
     Route::get('voyage', [VoyageController::class, 'index']);
-    Route::get('voyage/{id}', [VoyageController::class, 'show']);
+    Route::get('voyage/{voyage}', [VoyageController::class, 'show']);
 
     //admin seulement
     Route::middleware('auth:admin')->group(function () {
         Route::post('voyage', [VoyageController::class, 'store']);
-        Route::put('voyage/{id}', [VoyageController::class, 'update']);
-        Route::delete('voyage/{id}', [VoyageController::class, 'destroy']); 
+        Route::put('voyage/{voyage}', [VoyageController::class, 'update']);
+        Route::delete('voyage/{voyage}', [VoyageController::class, 'destroy']); 
     });
 });  
     
