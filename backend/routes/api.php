@@ -3,6 +3,8 @@
 use App\Http\Controllers\AuthClientController;
 use App\Http\Controllers\AuthAdminController;
 use App\Http\Controllers\DestinationController;
+use App\Http\Controllers\PaiementController;
+use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\VoyageController;
 use Illuminate\Support\Facades\Route;
 
@@ -39,5 +41,19 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('voyage', [VoyageController::class, 'store']);
     Route::put('voyage/{voyage}', [VoyageController::class, 'update']);
     Route::delete('voyage/{voyage}', [VoyageController::class, 'destroy']); 
+
+
+Route::get('/reservations',[ReservationController::class, 'index']);
+Route::post('/reservations',[ReservationController::class, 'store']);
+Route::get('/reservations/{id}',[ReservationController::class, 'show']);
+Route::patch('/reservations/{id}/annuler', [ReservationController::class, 'annuler']);   
+
+
+Route::post('/paiements/initier',[PaiementController::class, 'initier']);
+// Étape 3 : upload de la preuve de paiement (lien reçu par SMS/mail)
+Route::post('/paiements/{id}/preuve',[PaiementController::class, 'uploadPreuve']);
+// Voir le paiement d'une réservation
+Route::get('/paiements/{idReservation}',[PaiementController::class, 'show']);
+
 });  
     

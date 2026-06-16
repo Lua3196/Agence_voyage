@@ -9,15 +9,21 @@ class DestinationController extends Controller
 {
      public function index(Request $request)
     {
-      $destination = Destination::all();
+      $destinations = Destination::all();
 
-      return response()->json(['data'=>$destination]);
+      foreach ($destinations as $destination){
+        $destination->image = asset('storage/' . $destination->image);
+      }
+
+      return response()->json(['data'=>$destinations]);
     }
     
 
     public function show(Destination $destination)
     {
-        return response()->json(['data'=> $destination]);
+      $destination->image = asset('storage/' . $destination->image);
+
+      return response()->json(['data'=> $destination]);
     }
 
 }
