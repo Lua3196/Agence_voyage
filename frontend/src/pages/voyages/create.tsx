@@ -1,21 +1,62 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CircleAlert, FileText, Image } from 'lucide-react';
+import { CircleAlert, Save, X } from 'lucide-react';
 import AppSidebarLayout from '../../layouts/app/app-sidebar-layout';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
+import { AlertMessage } from '../../components/ui/alert-message';
+import { createVoyage, getDestinations, type Destination } from '../../lib/api';
 
 export default function VoyagesCreate() {
     const navigate = useNavigate();
-    const [name, setName] = useState('');
-     const [description, setDescription] = useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const [destinations, setDestinations] = useState<Destination[]>([]);
+    const [loadingDest, setLoadingDest] = useState(true);
+
+    const [titre, setTitre] = useState('');
+    const [description, setDescription] = useState('');
+    const [idDestination, setIdDestination] = useState('');
+    const [dateDepart, setDateDepart] = useState('');
+    const [dataRetour, setDataRetour] = useState('');
+    const [prix, setPrix] = useState('');
+    const [placeDispo, setPlaceDispo] = useState('');
+
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+
+    useEffect(() => {
+        getDestinations()
+            .then((r) => setDestinations(r.data))
+            .catch(() => {})
+            .finally(() => setLoadingDest(false));
+    }, []);
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO: appel API Laravel
-        navigate('/voyages');
+        setLoading(true);
+        setError('');
+        setSuccess('');
+
+        try {
+            await createVoyage({
+                titre,
+                description,
+                idDestination: parseInt(idDestination),
+                dateDepart,
+                dataRetour,
+                prix: parseFloat(prix),
+                placeDispo: parseInt(placeDispo),
+            });
+            setSuccess('Voyage créé avec succès !');
+            setTimeout(() => navigate('/voyages'), 1200);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Erreur lors de la création');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -23,163 +64,110 @@ export default function VoyagesCreate() {
             breadcrumbs={[
                 { title: 'Tableau de Bord', href: '/dashboard' },
                 { title: 'Voyages', href: '/voyages' },
-                { title: 'Créer un voyage personnalisé', href: '/voyages/create' },
+                { title: 'Nouveau voyage', href: '/voyages/create' },
             ]}
         >
-          { /* <div className="flex flex-1 flex-col gap-4 rounded-xl  ">
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-[800px] h-[800px] border-2 rounded-2xl p-8 justify-center">
-                    <h1 className="text-2xl font-bold">Créer un voyage personnalisé</h1>
-                    <div className="grid gap-2">
-                        <Label htmlFor="name">Nom du voyage</Label>
-                        <Input
-                            id="name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="Mon voyage..."
-                        />
+            <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 md:py-12">
+                <div className="mb-8">
+                    <h2 className="text-3xl font-black">Créer un voyage</h2>
+                    <p className="text-muted-foreground mt-1">Remplissez les informations pour ajouter un nouveau voyage</p>
+                </div>
+
+                {error && <AlertMessage type="error" message={error} className="mb-6" />}
+                {success && <AlertMessage type="success" message={success} className="mb-6" />}
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="rounded-xl border border-border bg-card p-6 shadow-sm space-y-5">
+                        <div className="flex items-center gap-3 border-b pb-4">
+                            <CircleAlert className="h-5 w-5 text-primary" />
+                            <h3 className="text-lg font-bold">Informations générales</h3>
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="titre">Titre du voyage *</Label>
+                            <Input
+                                id="titre"
+                                value={titre}
+                                required
+                                onChange={(e) => setTitre(e.target.value)}
+                                placeholder="Ex: Circuit des Merveilles Asiatiques"
+                            />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="description">Description *</Label>
+                            <Textarea
+                                id="description"
+                                value={description}
+                                required
+                                onChange={(e) => setDescription(e.target.value)}
+                                placeholder="Décrivez ce voyage en détail..."
+                                rows={4}
+                            />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="destination">Destination *</Label>
+                            <select
+                                id="destination"
+                                required
+                                value={idDestination}
+                                onChange={(e) => setIdDestination(e.target.value)}
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+                            >
+                                <option value="">
+                                    {loadingDest ? 'Chargement...' : '-- Sélectionner une destination --'}
+                                </option>
+                                {destinations.map((d) => (
+                                    <option key={d.idDestination} value={d.idDestination}>
+                                        {d.nomDestination} ({d.region})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
-                     <div className="grid gap-2">
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea
-                            id="description"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            placeholder="Mon voyage..."
-                        />
+
+                    <div className="rounded-xl border border-border bg-card p-6 shadow-sm space-y-5">
+                        <div className="flex items-center gap-3 border-b pb-4">
+                            <CircleAlert className="h-5 w-5 text-primary" />
+                            <h3 className="text-lg font-bold">Dates & Tarifs</h3>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="dateDepart">Date de départ *</Label>
+                                <Input id="dateDepart" type="date" required value={dateDepart} onChange={(e) => setDateDepart(e.target.value)} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="dataRetour">Date de retour *</Label>
+                                <Input id="dataRetour" type="date" required value={dataRetour} onChange={(e) => setDataRetour(e.target.value)} />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="prix">Prix (€) *</Label>
+                                <Input id="prix" type="number" min="0" step="0.01" required value={prix} onChange={(e) => setPrix(e.target.value)} placeholder="0.00" />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="placeDispo">Places disponibles *</Label>
+                                <Input id="placeDispo" type="number" min="1" required value={placeDispo} onChange={(e) => setPlaceDispo(e.target.value)} placeholder="Ex: 20" />
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex gap-2">
-                        <Button type="submit">Créer</Button>
-                        <Button type="button" variant="outline" onClick={() => navigate('/voyages')}>
+
+                    <div className="flex gap-3 justify-end">
+                        <Button type="button" variant="outline" onClick={() => navigate('/voyages')} className="flex items-center gap-2">
+                            <X className="h-4 w-4" />
                             Annuler
+                        </Button>
+                        <Button type="submit" disabled={loading} className="flex items-center gap-2">
+                            <Save className="h-4 w-4" />
+                            {loading ? 'Création...' : 'Créer le voyage'}
                         </Button>
                     </div>
                 </form>
-            </div>*/}
-             <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 md:py-12">
-       
-        <div className="mb-10 text-center md:text-left">
-            <h2 className="text-text-main text-3xl md:text-4xl font-black leading-tight tracking-tight mb-3">Crée un circuit de voyage</h2>
-            <p className="text-text-secondary text-lg font-normal max-w-2xl">Remplissez les détails ci-dessous pour mettre
-                en place un nouveau circuit de voyage</p>
-        </div>
-
-        <form method="POST" action="/offres"  className="space-y-8">
-           
-
-            <div className="bg-surface-light rounded-xl shadow-sm border border-border-color p-6 md:p-8 space-y-6">
-                <div className="flex items-center gap-3 border-b border-border-color pb-4 mb-6">
-                    <CircleAlert/>
-                    <h3 className="text-xl font-bold text-text-main">Informations générales</h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-   
-                    <div className="col-span-1 md:col-span-2 space-y-2">
-                        <Label className="block text-text-main text-base font-medium" >Titre du voyage</Label>
-                        <Input
-                            className=" rounded-lg border-border-color bg-background-light text-text-main focus:ring-2 focus:ring-primary focus:border-transparent h-12 px-4 placeholder:text-text-secondary/50 transition-all font-sans"
-                            id="title" name="name"
-                            placeholder="Ex: Tour de Madagascar" type="text" required />
-                        <p className="text-xs text-text-secondary pl-1">Soyez bref et precis</p>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <label className="block text-text-main text-base font-medium">Date de départ</label>
-                            <div className="relative">
-                                <Input
-                                    className="w-full rounded-lg border-border-color bg-background-light text-text-main focus:ring-2 focus:ring-primary focus:border-transparent h-12 pl-4 pr-12 placeholder:text-text-secondary/50 transition-all font-semibold text-lg font-sans"
-                                    id="price" name="price"  type="date"
-                                    required />
-                               
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <label className="block text-text-main text-base font-medium">Date de retour</label>
-                            <div className="relative">
-                                <Input
-                                    className="w-full rounded-lg border-border-color bg-background-light text-text-main focus:ring-2 focus:ring-primary focus:border-transparent h-12 pl-4 pr-12 placeholder:text-text-secondary/50 transition-all font-semibold text-lg font-sans"
-                                    id="location" name="location"
-                                     type="date" required />
-                            </div>
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <label className="block text-text-main text-base font-medium " >Place
-                            disponible</label>
-                        <Input
-                        type="number"
-                            className=" w-[200px] rounded-lg border-border-color bg-background-light text-text-main focus:ring-2 focus:ring-primary focus:border-transparent h-12 px-4 placeholder:text-text-secondary/50 transition-all font-sans"
-                            id="number" name="number" min="1" required />
-                    </div>
-                </div>
-            </div>
-
-    
-            <div className="bg-surface-light rounded-xl shadow-sm border border-border-color p-6 md:p-8 space-y-6">
-                <div className="flex items-center gap-3 border-b border-border-color pb-4 mb-6">
-                    <FileText/>
-                    <h3 className="text-xl font-bold text-text-main">Détails et Prix</h3>
-                </div>
-                <div className="space-y-6">
-                    <div className="space-y-2">
-                        <label className="block text-text-main text-base font-medium" >Description</label>
-                        <Textarea
-                            className="w-full rounded-lg border-border-color bg-background-light text-text-main focus:ring-2 focus:ring-primary focus:border-transparent p-4 placeholder:text-text-secondary/50 resize-y transition-all font-sans"
-                            id="description" name="description" placeholder="Décrivez le circuit en détail..."
-                            required></Textarea>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <label className="block text-text-main text-base font-medium">Prix (€)</label>
-                            <div className="relative">
-                                <Input
-                                    className="w-full rounded-lg border-border-color bg-background-light text-text-main focus:ring-2 focus:ring-primary focus:border-transparent h-12 pl-4 pr-12 placeholder:text-text-secondary/50 transition-all font-semibold text-lg font-sans"
-                                    id="price" name="price" placeholder="0.00" type="text"
-                                    required />
-                               
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <label className="block text-text-main text-base font-medium">Emplacement</label>
-                            <div className="relative">
-                                <Input
-                                     className="w-full rounded-lg border-border-color bg-background-light text-text-main focus:ring-2 focus:ring-primary focus:border-transparent h-12 pl-4 pr-12 placeholder:text-text-secondary/50 transition-all font-semibold text-lg font-sans"
-                                    id="location" name="location"
-                                    placeholder="Ville" type="text" required />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-         
-            <div className="bg-surface-light rounded-xl shadow-sm border border-border-color p-6 md:p-8 space-y-6">
-                <div className="flex items-center gap-3 border-b border-border-color pb-4 mb-6">
-                    <Image/>
-                    <h3 className="text-xl font-bold text-text-main">Photos</h3>
-                </div>
-                <div className="space-y-4">
-                    <label className="block text-text-main text-base font-medium">Ajouter une image principale</label>
-                    <input type="file" name="product_image" className="w-full text-text-secondary file:transition-all file:scale-102  file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-all" required/>
-                </div>
-            </div>
-
-   
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 pb-12">
-                <a href="/"
-                    className="w-full sm:w-auto px-8 py-3 rounded-lg text-text-main font-semibold hover:bg-gray-100 transition-colors text-center">
-                    Annuler
-                </a>
-                <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-                    <button
-                        className="w-full sm:w-auto px-8 py-3 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
-                        type="submit">
-                        <span>Publier le circuit</span>
-                    </button>
-                </div>
-            </div>
-        </form>
-    </main>
+            </main>
         </AppSidebarLayout>
     );
 }

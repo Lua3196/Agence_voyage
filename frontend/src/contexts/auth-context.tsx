@@ -1,46 +1,51 @@
-/**
- * AuthContext — contexte auth pour mode front-only (sans Laravel)
- *
- * En phase de test frontend, un utilisateur fictif est utilisé.
- * Quand tu connectes Laravel, remplace le fakeUser et les fonctions
- * login/logout par de vrais appels API.
- */
-
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { User } from '../types';
+
+export type AuthRole = 'admin' | 'client' | null;
 
 type AuthContextType = {
     user: User | null;
-    login: (user: User) => void;
+    role: AuthRole;
+    token: string | null;
+    login: (user: User, token: string, role: AuthRole) => void;
     logout: () => void;
     isAuthenticated: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Utilisateur fictif pour le mode front-only
-const fakeUser: User = {
-    id: 1,
-    name: 'Jean Dupont',
-    email: 'jean.dupont@example.com',
-    avatar: undefined,
-    email_verified_at: new Date().toISOString(),
-    two_factor_enabled: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-};
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    // Démarre avec l'utilisateur fictif connecté pour tester le dashboard
-    // Mets `null` ici pour forcer la redirection vers /login au démarrage
-    //const [user, setUser] = useState<User | null>(fakeUser);
-    const [user, setUser] = useState<User | null>(null);// COMMENTEO ITO DE DECOMMENTEO NY AMBANY RAHA HITEST DASHBOARD ETC
+    const [user, setUser] = useState<User | null>(() => {
+        const stored = localStorage.getItem('auth_user');
+        return stored ? JSON.parse(stored) : null;
+    });
+    const [token, setToken] = useState<string | null>(() =>
+        localStorage.getItem('auth_token')
+    );
+    const [role, setRole] = useState<AuthRole>(() =>
+        (localStorage.getItem('auth_role') as AuthRole) || null
+    );
 
-    const login = (u: User) => setUser(u);
-    const logout = () => setUser(null);
+    const login = (u: User, t: string, r: AuthRole) => {
+        setUser(u);
+        setToken(t);
+        setRole(r);
+        localStorage.setItem('auth_user', JSON.stringify(u));
+        localStorage.setItem('auth_token', t);
+        localStorage.setItem('auth_role', r || '');
+    };
+
+    const logout = () => {
+        setUser(null);
+        setToken(null);
+        setRole(null);
+        localStorage.removeItem('auth_user');
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_role');
+    };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+        <AuthContext.Provider value={{ user, token, role, login, logout, isAuthenticated: !!user }}>
             {children}
         </AuthContext.Provider>
     );

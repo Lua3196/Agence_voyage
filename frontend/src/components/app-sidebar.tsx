@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
-import { BookOpen, FolderGit2, LayoutGrid, PackageSearch } from 'lucide-react';
+import { LayoutGrid, Plane, Globe, Users } from 'lucide-react';
 import AppLogo from './app-logo';
-import { NavFooter } from './nav-footer';
 import { NavMain } from './nav-main';
 import { NavUser } from './nav-user';
 import {
@@ -24,20 +23,17 @@ const mainNavItems: NavItem[] = [
     {
         title: 'Voyages',
         href: '/voyages',
-        icon: PackageSearch,
-    },
-];
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: FolderGit2,
+        icon: Plane,
     },
     {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
+        title: 'Destinations',
+        href: '/dashboard#destinations',
+        icon: Globe,
+    },
+    {
+        title: 'Clients',
+        href: '/dashboard#clients',
+        icon: Users,
     },
 ];
 
@@ -61,7 +57,6 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

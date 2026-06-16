@@ -8,17 +8,21 @@ import {
 } from './ui/dropdown-menu';
 import { UserInfo } from './user-info';
 import { useAuth } from '../contexts/auth-context';
+import { logout as apiLogout } from '../lib/api';
 import type { User } from '../types';
 
-type Props = {
-    user: User;
-};
+type Props = { user: User };
 
 export function UserMenuContent({ user }: Props) {
     const navigate = useNavigate();
     const { logout } = useAuth();
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        try {
+            await apiLogout();
+        } catch {
+            // token déjà invalide — on déconnecte quand même
+        }
         logout();
         navigate('/login');
     };
@@ -32,20 +36,13 @@ export function UserMenuContent({ user }: Props) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-                <DropdownMenuItem
-                    className="cursor-pointer"
-                    onClick={() => navigate('/settings/profile')}
-                >
+                <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/settings/profile')}>
                     <Settings className="mr-2 h-4 w-4" />
                     Paramètres
                 </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={handleLogout}
-                data-test="logout-button"
-            >
+            <DropdownMenuItem className="cursor-pointer" onClick={handleLogout} data-test="logout-button">
                 <LogOut className="mr-2 h-4 w-4" />
                 Se déconnecter
             </DropdownMenuItem>
